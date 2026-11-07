@@ -1,8 +1,6 @@
 import PropTypes from 'prop-types';
 import { PureComponent } from 'react';
 
-import { FormattedMessage } from 'react-intl';
-
 import classNames from 'classnames';
 
 import { is } from 'immutable';
@@ -12,11 +10,24 @@ import { debounce } from 'lodash';
 
 import { AltTextBadge } from 'mastodon/components/alt_text_badge';
 import { Blurhash } from 'mastodon/components/blurhash';
+import { MediaFooter } from 'mastodon/components/media_footer';
 import { SpoilerButton } from 'mastodon/components/spoiler_button';
 import { formatTime } from 'mastodon/features/video';
 
 import { autoPlayGif, displayMedia, useBlurhash } from '../initial_state';
-import { Button } from './button';
+
+const getDescription = (attachment) => attachment.getIn(['translation', 'description']) || attachment.get('description');
+
+const getTypeLabel = (attachment) => {
+  switch (attachment.get('type')) {
+  case 'gifv':
+    return 'GIF';
+  case 'video':
+    return formatTime(Math.floor(attachment.getIn(['meta', 'original', 'duration'])));
+  default:
+    return null;
+  }
+};
 
 class Item extends PureComponent {
 
@@ -91,7 +102,7 @@ class Item extends PureComponent {
   render () {
     const { attachment, lang, index, size, standalone, displayWidth, visible } = this.props;
 
-    let badges = [], thumbnail;
+    let thumbnail;
 
     let width  = 50;
     let height = 100;
@@ -104,11 +115,7 @@ class Item extends PureComponent {
       height = 50;
     }
 
-    const description = attachment.getIn(['translation', 'description']) || attachment.get('description');
-
-    if (description?.length > 0) {
-      badges.push(<AltTextBadge key='alt' description={description} />);
-    }
+    const description = getDescription(attachment);
 
     if (attachment.get('type') === 'unknown') {
       return (
@@ -161,13 +168,6 @@ class Item extends PureComponent {
       );
     } else if (['gifv', 'video'].includes(attachment.get('type'))) {
       const autoPlay = this.getAutoPlay();
-      const duration = attachment.getIn(['meta', 'original', 'duration']);
-
-      if (attachment.get('type') === 'gifv') {
-        badges.push(<span key='gif' className='media-gallery__alt__label media-gallery__alt__label--non-interactive'>GIF</span>);
-      } else {
-        badges.push(<span key='video' className='media-gallery__alt__label media-gallery__alt__label--non-interactive'>{formatTime(Math.floor(duration))}</span>);
-      }
 
       thumbnail = (
         <div className={classNames('media-gallery__gifv', { autoplay: autoPlay })}>
@@ -201,12 +201,6 @@ class Item extends PureComponent {
         />
 
         {visible && thumbnail}
-
-        {visible && badges && (
-          <div className='media-gallery__item__badges'>
-            {badges}
-          </div>
-        )}
       </div>
     );
   }
@@ -322,26 +316,39 @@ class MediaGallery extends PureComponent {
     }
 
     return (
-      <div className={`media-gallery media-gallery--layout-${size}`} style={style} ref={this.handleRef}>
-        {children}
+      <>
+        <div className={`media-gallery media-gallery--layout-${size}`} style={style} ref={this.handleRef}>
+          {children}
 
-        {(!visible || uncached) && <SpoilerButton uncached={uncached} sensitive={sensitive} onClick={this.handleOpen} matchedFilters={matchedFilters} />}
+          {(!visible || uncached) && <SpoilerButton uncached={uncached} sensitive={sensitive} onClick={this.handleOpen} matchedFilters={matchedFilters} />}
+        </div>
 
         {(visible && !uncached) && (
-          <div className='media-gallery__actions'>
-            <Button
-              contrastOnMedia
-              size='xs'
-              type='button'
-              variant='solid'
-              className='media-gallery__actions__pill'
-              onClick={this.handleOpen}
-            >
-              <FormattedMessage id='media_gallery.hide' defaultMessage='Hide' />
-            </Button>
-          </div>
+          <MediaFooter onHide={this.handleOpen}>
+            {media.map((attachment, i) => {
+              const description = getDescription(attachment);
+              const typeLabel = getTypeLabel(attachment);
+              const index = size > 1 ? i + 1 : undefined;
+
+              if (!typeLabel && !(description?.length > 0)) {
+                return null;
+              }
+
+              return (
+                <div key={attachment.get('id')} className='media-footer__group'>
+                  {typeLabel && (
+                    <span className='media-gallery__alt__label media-gallery__alt__label--non-interactive'>
+                      {index === undefined ? typeLabel : `${typeLabel} ${index}`}
+                    </span>
+                  )}
+
+                  {description?.length > 0 && <AltTextBadge description={description} index={index} />}
+                </div>
+              );
+            })}
+          </MediaFooter>
         )}
-      </div>
+      </>
     );
   }
 

@@ -53,19 +53,6 @@
   }
 }
 
-.galleryHideButtons {
-  :global(.media-gallery__item__badges),
-  :global(.media-gallery__actions) {
-    display: none;
-  }
-}
-
-.galleryHideActions {
-  :global(.media-gallery__actions) {
-    display: none;
-  }
-}
-
 .galleryFilterBlur::after {
   background-color: var(--color-bg-media);
 }

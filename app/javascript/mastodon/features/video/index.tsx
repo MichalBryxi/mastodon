@@ -1,6 +1,6 @@
 import { useEffect, useCallback, useRef, useState } from 'react';
 
-import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
+import { defineMessages, useIntl } from 'react-intl';
 
 import classNames from 'classnames';
 
@@ -8,7 +8,6 @@ import { useSpring, animated, config } from '@react-spring/web';
 import { throttle } from 'lodash';
 
 import type { DeployPictureInPictureCallback } from '@/mastodon/actions/picture_in_picture';
-import { Button } from '@/mastodon/components/button';
 import { useRevealedMedia } from '@/mastodon/hooks/useRevealedMedia';
 import Forward5Icon from '@/material-icons/400-24px/forward_5-fill.svg?react';
 import FullscreenIcon from '@/material-icons/400-24px/fullscreen.svg?react';
@@ -20,8 +19,10 @@ import Replay5Icon from '@/material-icons/400-24px/replay_5-fill.svg?react';
 import VolumeDownIcon from '@/material-icons/400-24px/volume_down-fill.svg?react';
 import VolumeOffIcon from '@/material-icons/400-24px/volume_off-fill.svg?react';
 import VolumeUpIcon from '@/material-icons/400-24px/volume_up-fill.svg?react';
+import { AltTextBadge } from 'mastodon/components/alt_text_badge';
 import { Blurhash } from 'mastodon/components/blurhash';
 import { Icon } from 'mastodon/components/icon';
+import { MediaFooter } from 'mastodon/components/media_footer';
 import { SpoilerButton } from 'mastodon/components/spoiler_button';
 import {
   isFullscreen,
@@ -846,32 +847,6 @@ export const Video: React.FC<{
           matchedFilters={matchedFilters}
         />
 
-        {!onCloseVideo &&
-          !editable &&
-          !fullscreen &&
-          !alwaysVisible &&
-          revealed && (
-            <div
-              className={classNames('media-gallery__actions', {
-                active: paused || hovered,
-              })}
-            >
-              <Button
-                contrastOnMedia
-                size='xs'
-                variant='solid'
-                className='media-gallery__actions__pill'
-                onClick={toggleReveal}
-                type='button'
-              >
-                <FormattedMessage
-                  id='media_gallery.hide'
-                  defaultMessage='Hide'
-                />
-              </Button>
-            </div>
-          )}
-
         <div
           className={classNames('video-player__controls', {
             active: paused || hovered,
@@ -1019,6 +994,12 @@ export const Video: React.FC<{
           </div>
         </div>
       </div>
+
+      {!onCloseVideo && !editable && !alwaysVisible && revealed && (
+        <MediaFooter onHide={toggleReveal}>
+          {alt && <AltTextBadge description={alt} />}
+        </MediaFooter>
+      )}
     </div>
   );
 };

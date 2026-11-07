@@ -16,7 +16,12 @@ import classes from './styles.module.scss';
 export const AltTextBadge: React.FC<{
   description: string;
   className?: string;
-}> = ({ description, className }) => {
+  /**
+   * Position of the attachment within a multi-item gallery, shown next to
+   * the label so it's clear which item the description belongs to
+   */
+  index?: number;
+}> = ({ description, className, index }) => {
   const intl = useIntl();
   const uniqueId = useId();
   const popoverId = `${uniqueId}-popover`;
@@ -66,6 +71,7 @@ export const AltTextBadge: React.FC<{
       >
         ALT
         {/* Not translatable so it stays compact, like an icon */}
+        {index !== undefined && ` ${index}`}
       </Button>
 
       <Popover
